@@ -1,0 +1,88 @@
+# app.py
+
+import os
+
+import boto3
+
+from flask import Flask, jsonify, request
+app = Flask(__name__)
+
+USERS_TABLE = os.environ['USERS_TABLE']
+METRICS_TABLE = os.environ['METRICS_TABLE']
+client = boto3.client('dynamodb')
+
+
+@app.route("/")
+def hello():
+    return "Antibiotic backend v0.1"
+
+
+@app.route("/users/<string:email>")
+def get_user(email):
+    resp = client.get_item(
+        TableName=USERS_TABLE,
+        Key={
+            'email': {'S': email}
+        }
+    )
+    item = resp.get('Item')
+    if not item:
+        return jsonify({'error': 'User does not exist'}), 404
+
+    return jsonify({
+        'first_name': item.get('first_name').get('S'),
+        'last_name': item.get('last_name').get('S'),
+        'email': item.get('email').get('S')
+    })
+
+
+@app.route("/users", methods=["POST"])
+def create_user():
+    first_name = request.json.get('first_name')
+    last_name = request.json.get('last_name')
+    email = request.json.get('email')
+    if not first_name or not last_name or not email:
+        return jsonify({'error': 'Please provide first name, last name and email'}), 400
+
+    resp = client.put_item(
+        TableName=USERS_TABLE,
+        Item={
+            'first_name': {'S': first_name },
+            'last_name': {'S': last_name},
+            'email': {'S': email}
+        }
+    )
+
+    return jsonify({
+        'first_name': first_name,
+        'last_name': last_name,
+        'email': email
+    })
+
+
+@app.route("/metrics", methods=["POST"])
+def post_metrics():
+    deviceId = request.json.get('deviceId')
+    datetime = request.json.get('datetime')
+    email = request.json.get('email')
+    heart_rate = request.json.get('heart_rate')
+
+    if not deviceId or not datetime or not email:
+        return jsonify({'error': 'Please provide deviceId, datetime and email'}), 400
+
+    resp = client.put_item(
+        TableName=METRICS_TABLE,
+        Item={
+            'deviceId': {'S': deviceId},
+            'datetime': {'S': datetime},
+            'email': {'S': email},
+            'heart_rate': {'S': heart_rate}
+        }
+    )
+
+    return jsonify({
+        'deviceId': deviceId,
+        'datetime': datetime,
+        'email': email,
+        'heart_rate': heart_rate
+    })
