@@ -5,6 +5,8 @@ import os
 import boto3
 
 from flask import Flask, jsonify, request
+from flask_cors import cross_origin
+from auth import AuthError, requires_auth
 app = Flask(__name__)
 
 USERS_TABLE = os.environ['USERS_TABLE']
@@ -12,12 +14,22 @@ METRICS_TABLE = os.environ['METRICS_TABLE']
 client = boto3.client('dynamodb')
 
 
+@app.errorhandler(AuthError)
+def handle_auth_error(ex):
+    response = jsonify(ex.error)
+    response.status_code = ex.status_code
+    return response
+
+
 @app.route("/")
+@cross_origin(headers=["Content-Type", "Authorization"])
 def hello():
     return "Antibiotic backend v0.1"
 
 
 @app.route("/users/<string:email>")
+@cross_origin(headers=["Content-Type", "Authorization"])
+@requires_auth
 def get_user(email):
     resp = client.get_item(
         TableName=USERS_TABLE,
