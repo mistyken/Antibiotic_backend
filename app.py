@@ -49,6 +49,8 @@ def get_user(email):
 
 
 @app.route("/users", methods=["POST"])
+@cross_origin(headers=["Content-Type", "Authorization"])
+@requires_auth
 def create_user():
     first_name = request.json.get('first_name')
     last_name = request.json.get('last_name')
@@ -56,7 +58,7 @@ def create_user():
     if not first_name or not last_name or not email:
         return jsonify({'error': 'Please provide first name, last name and email'}), 400
 
-    resp = client.put_item(
+    client.put_item(
         TableName=USERS_TABLE,
         Item={
             'first_name': {'S': first_name },
@@ -73,6 +75,8 @@ def create_user():
 
 
 @app.route("/metrics", methods=["POST"])
+@cross_origin(headers=["Content-Type", "Authorization"])
+@requires_auth
 def post_metrics():
     deviceId = request.json.get('deviceId')
     datetime = request.json.get('datetime')
@@ -82,19 +86,17 @@ def post_metrics():
     if not deviceId or not datetime or not email:
         return jsonify({'error': 'Please provide deviceId, datetime and email'}), 400
 
-    resp = client.put_item(
+    client.put_item(
         TableName=METRICS_TABLE,
         Item={
-            'deviceId': {'S': deviceId},
+            'metricId': {'S': '{}-{}'.format(deviceId, email)},
             'datetime': {'S': datetime},
-            'email': {'S': email},
             'heart_rate': {'S': heart_rate}
         }
     )
 
     return jsonify({
-        'deviceId': deviceId,
+        'metricId': '{}-{}'.format(deviceId, email),
         'datetime': datetime,
-        'email': email,
         'heart_rate': heart_rate
     })

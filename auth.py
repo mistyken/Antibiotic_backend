@@ -7,7 +7,7 @@ from jose import jwt
 
 
 AUTH0_DOMAIN = 'dev-q554jsev.us.auth0.com'
-API_AUDIENCE = 'https://m6fea98ao1.execute-api.us-west-1.amazonaws.com/dev'
+API_AUDIENCE = 'https://vu2zleiyhc.execute-api.us-west-1.amazonaws.com/dev'
 ALGORITHMS = ["RS256"]
 
 

@@ -77,14 +77,14 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: deviceId
+            AttributeName: metricId
             AttributeType: S
           -
             AttributeName: datetime
             AttributeType: S
         KeySchema:
           -
-            AttributeName: deviceId
+            AttributeName: metricId
             KeyType: HASH
           - 
             AttributeName: datetime
