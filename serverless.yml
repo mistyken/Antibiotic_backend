@@ -46,6 +46,10 @@ functions:
     handler: wsgi_handler.handler
     events:
       - http: 'GET /users/{proxy+}'
+  getMetrics:
+    handler: wsgi_handler.handler
+    events:
+      - http: 'GET /metrics/{proxy+}'
   createUser:
     handler: wsgi_handler.handler
     events:

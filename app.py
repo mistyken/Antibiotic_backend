@@ -44,8 +44,50 @@ def get_user(email):
     return jsonify({
         'first_name': item.get('first_name').get('S'),
         'last_name': item.get('last_name').get('S'),
-        'email': item.get('email').get('S')
+        'email': item.get('email').get('S'),
+        'age': item.get('age').get('S'),
+        'gender': item.get('gender').get('S')
     })
+
+
+@app.route("/metrics/<string:metricId>", methods=["GET"])
+@cross_origin(headers=["Content-Type", "Authorization"])
+@requires_auth
+def get_metrics(metricId):
+    from_time_stamp = request.args.get('from', '')
+    to_time_stamp = request.args.get('to', '')
+
+    if not from_time_stamp or not to_time_stamp:
+        resp = client.query(
+            TableName=METRICS_TABLE,
+            KeyConditionExpression='metricId = :metricId',
+            ScanIndexForward=False,
+            Limit=1,
+            ExpressionAttributeValues={
+                ':metricId': {'S': metricId}
+            }
+        )
+    else:
+        resp = client.query(
+            TableName=METRICS_TABLE,
+            KeyConditionExpression='metricId = :metricId AND #datetime BETWEEN :from AND :to',
+            ExpressionAttributeNames={"#datetime": "datetime"},
+            ExpressionAttributeValues={
+                ':metricId': {'S': metricId},
+                ':from': {'S': from_time_stamp},
+                ':to': {'S': to_time_stamp}
+            }
+        )
+
+    result = []
+    items = resp.get('Items')
+    for item in items:
+        result.append({
+            'datetime': item.get('datetime').get('S'),
+            'heart_rate': item.get('heart_rate').get('S')
+        })
+
+    return jsonify(result)
 
 
 @app.route("/users", methods=["POST"])
@@ -55,6 +97,9 @@ def create_user():
     first_name = request.json.get('first_name')
     last_name = request.json.get('last_name')
     email = request.json.get('email')
+    gender = request.json.get('gender', '')
+    age = request.json.get('age', '')
+    deviceId = request.json.get('deviceId', '')
     if not first_name or not last_name or not email:
         return jsonify({'error': 'Please provide first name, last name and email'}), 400
 
@@ -63,7 +108,10 @@ def create_user():
         Item={
             'first_name': {'S': first_name },
             'last_name': {'S': last_name},
-            'email': {'S': email}
+            'email': {'S': email},
+            'gender': {'S': gender},
+            'age': {'S': age},
+            'deviceId': {'S': deviceId}
         }
     )
 
@@ -81,7 +129,7 @@ def post_metrics():
     deviceId = request.json.get('deviceId')
     datetime = request.json.get('datetime')
     email = request.json.get('email')
-    heart_rate = request.json.get('heart_rate')
+    heart_rate = request.json.get('heart_rate', '')
 
     if not deviceId or not datetime or not email:
         return jsonify({'error': 'Please provide deviceId, datetime and email'}), 400
