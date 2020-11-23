@@ -46,7 +46,8 @@ def get_user(email):
         'last_name': item.get('last_name').get('S'),
         'email': item.get('email').get('S'),
         'age': item.get('age').get('S'),
-        'gender': item.get('gender').get('S')
+        'gender': item.get('gender').get('S'),
+        'deviceId': item.get('deviceId').get('S')
     })
 
 
